@@ -1,0 +1,16 @@
+{
+  "name": "gmailninjamarkettrader",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "gmailpush": "^1.0.5",
+    "imap": "^0.8.19",
+    "ninjatrader": "^0.2.5"
+  }
+}
