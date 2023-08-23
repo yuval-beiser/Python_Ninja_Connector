@@ -49,6 +49,16 @@ password = 'udxevmpjelxwqhvg'
 mail = imaplib.IMAP4_SSL("imap.gmail.com")
 mail.login("yuval2604@gmail.com", "udxevmpjelxwqhvg")  # Replace with your email and password
 
+All_Users = ['FLAGA', 'FLAGB', 'FLAGC']
+Own_User = 0
+new_list = All_Users[:Own_User] + All_Users[Own_User + 1:]
+
+def extract_number_shares(subject):
+    words = subject.split()
+    number_index = next((i for i, word in enumerate(words) if not word.isalpha()), None)
+    shares = words[number_index]
+
+    return shares
 
 def check_email():
     mail.select("inbox")
@@ -56,12 +66,13 @@ def check_email():
     print("Connection time", datetime.datetime.now())
     if result == 'OK':
         email_ids = data[0].split()
-        LoopEmailIDsFirst(email_ids, '+FLAGS', 'FLAGB')
+        for i in new_list:
+            LoopEmailIDsFirst(email_ids, '+FLAGS', new_list)
 
     result, data = mail.search(None, 'KEYWORD FLAGA')
     if result == 'OK':
         email_ids = data[0].split()
-        LoopEmailIDsFirst(email_ids, '-FLAGS', 'FLAGA')
+        LoopEmailIDsFirst(email_ids, '-FLAGS', All_Users[Own_User])
 
     mail.logout()
 
