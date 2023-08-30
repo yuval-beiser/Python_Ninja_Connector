@@ -1,5 +1,10 @@
 const WebSocket = require("ws");
 const fs = require("fs");
+var NT = require("ninjatrader");
+
+var nt = new NT.default({
+    account: "Sim101"
+});
 
 var settings = JSON.parse(fs.readFileSync("settings.json"));
 console.log(settings);
@@ -34,6 +39,12 @@ function reg(){
       }
       if(msg.to && msg.to != "LOG"){
         var instrument = settings[msg.to];
+
+        /*
+        ntMarket(1,instrument,NT.NinjaTraderAction.Buy,(res)=>{
+          console.log(res);
+        });
+        */
       }
   });
 
@@ -47,4 +58,38 @@ function reg(){
     clearInterval(interId);
     reg();
   })
+}
+
+function ntMarket(qty,instrument,action,cb){
+  nt.market({
+      action: action,
+      quantity: qty,
+      tif: NT.NinjaTraderTif.Day,
+      instrument: instrument,
+      onUpdate: function (status, state) {
+          switch (status) {
+              case NT.OrderStatus.Rejected:
+                  // order rejected
+                  cb({
+                      stat:"rejected"
+                  })
+                  break;
+              case NT.OrderStatus.Filled:
+                  // order filled
+                  //console.log(state); // { quantity: 69, price: 49.40 }
+                  cb({
+                      stat:"filled",
+                      state:state
+                  })
+                  break;
+          }
+      },
+      onRejected: function (state) {
+          // order rejected
+          cb({
+              stat:"rejected",
+              state:state
+          })
+      }
+  }); // order accepted after await
 }
