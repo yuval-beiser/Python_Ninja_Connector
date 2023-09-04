@@ -5,6 +5,7 @@ import os
 import time
 from time import sleep
 import pyautogui
+import base64
 
 
 def open_ninja():
@@ -35,8 +36,8 @@ def run_node_script(script_path):
 
 
 # Replace "path/to/your/node/appBuy.js" with the actual path to your Node.js script
-buy_path = "C:/Users/Main/downloads/GmailNinjaMarketTrader/GmailNinjaMarketTrader/appBuy.js"
-sell_path = "C:/Users/Main/downloads/GmailNinjaMarketTrader/GmailNinjaMarketTrader/appSell.js"
+buy_path = "C:\\Users\windows\Documents\Python_Ninja_Connector/appBuy.js"
+sell_path = "C:\\Users\windows\Documents\Python_Ninja_Connector/appSell.js"
 
 # buy x=4296, y=266
 # sell x=4556, y=258
@@ -49,9 +50,13 @@ password = 'udxevmpjelxwqhvg'
 mail = imaplib.IMAP4_SSL("imap.gmail.com")
 mail.login("yuval2604@gmail.com", "udxevmpjelxwqhvg")  # Replace with your email and password
 
+mail.select("inbox")
+result, data = mail.search(None, 'UNSEEN')
+
 All_Users = ['FLAGA', 'FLAGB', 'FLAGC']
 Own_User = 0
 new_list = All_Users[:Own_User] + All_Users[Own_User + 1:]
+
 
 def extract_number_shares(subject):
     words = subject.split()
@@ -61,11 +66,15 @@ def extract_number_shares(subject):
     return shares
 
 def check_email():
+    mail = imaplib.IMAP4_SSL("imap.gmail.com")
+    mail.login("yuval2604@gmail.com", "udxevmpjelxwqhvg")  # Replace with your email and password
+
     mail.select("inbox")
     result, data = mail.search(None, 'UNSEEN')
-    print("Connection time", datetime.datetime.now())
+    #print("Connection time", datetime.datetime.now())
     if result == 'OK':
         email_ids = data[0].split()
+        print(data[0], email_ids)
         for i in new_list:
             LoopEmailIDsFirst(email_ids, '+FLAGS', new_list)
 
@@ -77,22 +86,44 @@ def check_email():
     mail.logout()
 
 
+def decode_subject(encoded_subject):
+
+    # Decode the subject
+    decoded_subject = ""
+    parts = encoded_subject.split("?=")
+    for part in parts:
+        if part.startswith("=?UTF-8?B?"):
+            encoded_text = part[len("=?UTF-8?B?"):].strip()
+            decoded_text = base64.b64decode(encoded_text).decode("utf-8")
+            decoded_subject += decoded_text
+
+    return (decoded_subject)
+
+
 def LoopEmailIDsFirst(email_ids, flagsOnOff, flagSig):
     for email_id in email_ids:
         result, msg_data = mail.fetch(email_id, '(RFC822)')
         if result == 'OK':
+            raw_email = msg_data[0][1].decode('utf-8')
             msg = email.message_from_bytes(msg_data[0][1])
-            if "BOUGHT" in msg["subject"] and "MNQ" in msg["subject"]:
+            subject = decode_subject(msg["subject"])
+            print(subject)
+            if "BOUGHT" in subject and "MNQ" in subject:
                 mail.store(email_id, flagsOnOff, flagSig)
                 print("Buy", msg["subject"])
                 buy()
 
-            if "SOLD" in msg["subject"] and "MNQ" in msg["subject"]:
+            if "SOLD" in subject and "MNQ" in subject:
                 mail.store(email_id, flagsOnOff, flagSig)
                 print("Sell", msg["subject"])
                 sell()
 
 
 while True:
-    check_email()
-    time.sleep(2)
+    try:
+        check_email()
+        time.sleep(2)
+
+    except Exception as e:
+        print("WOW ERROR !!!!!!!", e)
+        time.sleep(3)
